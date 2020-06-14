@@ -78,12 +78,12 @@ public class EasyExcavateClient implements ClientModInitializer {
 								(tool!=null && Arrays.asList(serverConfig.blacklistTools).contains(String.valueOf(Registry.ITEM.getId(tool.getItem()).toString())) && !serverConfig.invertToolBlacklist) ||
 								(tool!=null && !Arrays.asList(serverConfig.blacklistTools).contains(String.valueOf(Registry.ITEM.getId(tool.getItem()).toString())) && serverConfig.invertToolBlacklist) ||
 								(block instanceof BlockWithEntity && !serverConfig.enableBlockEntities) ||
-								((tool==null||!tool.getItem().canDamage())&&serverConfig.isToolRequired) ||
-								(!serverConfig.dontTakeDurability && tool.getItem().canDamage()&&blocksBroken>=(tool.getDurability()-tool.getDamage()))
+								((tool==null||!tool.getItem().isDamageable())&&serverConfig.isToolRequired) ||
+								(!serverConfig.dontTakeDurability && tool.getItem().isDamageable()&&blocksBroken>=(tool.getMaxDamage()-tool.getDamage()))
 						) break;
 						if(!brokenPos.contains(p)&&player.isUsingEffectiveTool(world.getBlockState(p))&&(!serverConfig.checkHardness||world.getBlockState(p).getHardness(world,p)<=hardness)) {
 							if(Math.sqrt(p.getSquaredDistance(pos))<=serverConfig.maxRange)nextPos.add(p);
-							MinecraftClient.getInstance().getNetworkHandler().getClientConnection().send(EasyExcavate.createBreakPacket(p));
+							MinecraftClient.getInstance().getNetworkHandler().getConnection().send(EasyExcavate.createBreakPacket(p));
 							brokenPos.add(p);
 							blocksBroken++;
 							exhaust = (0.005F*blocksBroken)*((blocksBroken*serverConfig.bonusExhaustionMultiplier)+1);
@@ -96,14 +96,14 @@ public class EasyExcavateClient implements ClientModInitializer {
 				} else break;
 			}
 			if(!player.isCreative()) {
-				MinecraftClient.getInstance().getNetworkHandler().getClientConnection().send(EasyExcavate.createEndPacket(blocksBroken));
+				MinecraftClient.getInstance().getNetworkHandler().getConnection().send(EasyExcavate.createEndPacket(blocksBroken));
 				EasyExcavate.debugOut("End packet sent! blocks broken: "+blocksBroken);
 			}
 		});
 	}
 
 	private ArrayList<BlockPos> getSameNeighbours(World world, BlockPos pos, Block block) {
-		ArrayList<BlockPos> list = new ArrayList<BlockPos>();
+		ArrayList<BlockPos> list = new ArrayList<>();
 		for(int x=-1; x<=1; x++) {
 			for(int y=-1; y<=1; y++) {
 				for(int z=-1; z<=1; z++) {
