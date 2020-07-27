@@ -1,9 +1,9 @@
 [![Fabric](https://img.shields.io/badge/Mod_Loader-Fabric-blue)](https://fabricmc.net/)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.15.2-green)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.16.1-green)](https://www.minecraft.net/)
 
 # easyexcavate
 
-This mod is heavily inspired by, and is essentially a barebones clone of, VeinMiner or OreExcavator, built for 1.14.x using Fabric!
+This mod is heavily inspired by, and is essentially a barebones clone of, VeinMiner or OreExcavator, built for 1.16.1 using Fabric!
 
 
 Hold the Grave key (or whatever key you've set in the controls menu) when mining a block (with the correct tool) and blocks of the same type will get broken alongside it!
@@ -32,5 +32,9 @@ By default, an excavation can mine up to 128 blocks at once, with a range of 8 a
 
 The End Portal excavated lol.
 
-##
+## Notes
 
+this is a fork of https://github.com/Shnupbups/easyexcavate. this creator quit development and designated [Diggus Maximus](https://www.curseforge.com/minecraft/mc-mods/diggus-maximus) as the successor.
+the reason for continuing to develop this project is to study fabric moding.
+
+##

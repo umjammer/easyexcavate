@@ -1,7 +1,10 @@
 
 package com.shnupbups.easyexcavate;
 
+import com.shnupbups.easyexcavate.model.BreakPacket;
+import com.shnupbups.easyexcavate.model.ConfigPacket;
 import com.shnupbups.easyexcavate.model.EasyExcavate;
+import com.shnupbups.easyexcavate.model.EndPacket;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
@@ -18,16 +21,17 @@ public class EasyExcavateMod implements ModInitializer {
 
         model = new EasyExcavate(FabricLoader.getInstance().getConfigDirectory());
 
-        ServerSidePacketRegistry.INSTANCE.register(EasyExcavate.REQUEST_CONFIG, (packetContext, packetByteBuf) -> {
-            model.resuestConfig((ServerPlayerEntity) packetContext.getPlayer(), packetByteBuf);
+        ServerSidePacketRegistry.INSTANCE.register(ConfigPacket.IDENTIFIER, (packetContext, packetByteBuf) -> {
+            ConfigPacket p = new ConfigPacket(packetByteBuf);
+            model.resuestConfig((ServerPlayerEntity) packetContext.getPlayer(), p.pos, p.block, p.hardness, p.tool);
         });
 
-        ServerSidePacketRegistry.INSTANCE.register(EasyExcavate.BREAK_BLOCK, (packetContext, packetByteBuf) -> {
-            model.breakBock(packetContext.getPlayer(), packetByteBuf);
+        ServerSidePacketRegistry.INSTANCE.register(BreakPacket.IDENTIFIER, (packetContext, packetByteBuf) -> {
+            model.breakBlock(packetContext.getPlayer(), new BreakPacket(packetByteBuf).pos);
         });
 
-        ServerSidePacketRegistry.INSTANCE.register(EasyExcavate.END, (packetContext, packetByteBuf) -> {
-            model.end(packetContext.getPlayer(), packetByteBuf);
+        ServerSidePacketRegistry.INSTANCE.register(EndPacket.IDENTIFIER, (packetContext, packetByteBuf) -> {
+            model.end(packetContext.getPlayer(), new EndPacket(packetByteBuf).blocksBroken);
         });
     }
 }

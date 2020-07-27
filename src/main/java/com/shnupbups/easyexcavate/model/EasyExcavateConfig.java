@@ -1,14 +1,27 @@
 
 package com.shnupbups.easyexcavate.model;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
-import com.shnupbups.easyexcavate.EasyExcavateMod;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.registry.Registry;
 
 
 class EasyExcavateConfig {
+
+    private static Log logger = LogFactory.getLog(EasyExcavateConfig.class);
 
     public int maxBlocks;
     public int maxRange;
@@ -24,7 +37,31 @@ class EasyExcavateConfig {
     public boolean invertToolBlacklist;
     public boolean dontTakeDurability;
 
-    public EasyExcavateConfig(int maxBlocks,
+    static EasyExcavateConfig fromFile(File dir) {
+        EasyExcavateConfig config;
+        File configFile = new File(dir, "easyexcavate.json");
+        try (FileReader reader = new FileReader(configFile)) {
+            config = new Gson().fromJson(reader, EasyExcavateConfig.class);
+            try (FileWriter writer = new FileWriter(configFile)) {
+                writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(config));
+            } catch (IOException e2) {
+                System.out.println("[EasyExcavate] Failed to update config file!");
+            }
+            System.out.println("[EasyExcavate] Config loaded!");
+logger.debug("[EasyExcavate] Debug Output enabled! " + config.toString());
+        } catch (IOException e) {
+            System.out.println("[EasyExcavate] No config found, generating!");
+            config = new EasyExcavateConfig();
+            try (FileWriter writer = new FileWriter(configFile)) {
+                writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(config));
+            } catch (IOException e2) {
+                System.out.println("[EasyExcavate] Failed to generate config file!");
+            }
+        }
+        return config;
+    }
+
+    EasyExcavateConfig(int maxBlocks,
             int maxRange,
             float bonusExhaustionMultiplier,
             boolean debugOutput,
@@ -86,6 +123,28 @@ class EasyExcavateConfig {
         }
     }
 
+    /** */
+    final boolean isDeniedBlock(Block block) {
+        return (isDenylistedBlock(block) && !invertBlockBlacklist) ||
+                (!isDenylistedBlock(block) && invertBlockBlacklist);
+    }
+
+    /** */
+    final boolean isDenylistedBlock(Block block) {
+        return Arrays.asList(blacklistBlocks).contains(Registry.BLOCK.getId(block).toString());
+    }
+
+    /** */
+    final boolean isDeniedItem(ItemStack tool) {
+        return (tool != null && isDenylistedItem(tool) && !invertToolBlacklist) ||
+                (tool != null && !isDenylistedItem(tool) && invertToolBlacklist);
+    }
+
+    /** */
+    final boolean isDenylistedItem(ItemStack tool) {
+        return Arrays.asList(blacklistTools).contains(String.valueOf(Registry.ITEM.getId(tool.getItem()).toString()));
+    }
+
     public String toString() {
         return "maxB: " + maxBlocks + " maxR: " + maxRange + " bem: " + bonusExhaustionMultiplier + " ebe: " +
                enableBlockEntities + " blackB: " + Arrays.asList(blacklistBlocks) + " blackT: " +
@@ -93,76 +152,59 @@ class EasyExcavateConfig {
                invertBlockBlacklist + " invTB: " + invertToolBlacklist + " dTD: " + dontTakeDurability;
     }
 
-    public PacketByteBuf writeConfig(PacketByteBuf buf) {
-        return writeConfig(buf, this);
-    }
-
-    public static PacketByteBuf writeConfig(PacketByteBuf buf, EasyExcavateConfig config) {
-        buf.writeInt(config.maxBlocks);
-        buf.writeInt(config.maxRange);
-        buf.writeFloat(config.bonusExhaustionMultiplier);
-        buf.writeBoolean(config.enableBlockEntities);
-        if (config.blacklistBlocks != null && config.blacklistBlocks.length > 0) {
-            buf.writeInt(config.blacklistBlocks.length);
-            for (String s : config.blacklistBlocks) {
+    public PacketByteBuf toBytes(PacketByteBuf buf) {
+        buf.writeInt(this.maxBlocks);
+        buf.writeInt(this.maxRange);
+        buf.writeFloat(this.bonusExhaustionMultiplier);
+        buf.writeBoolean(this.enableBlockEntities);
+        if (this.blacklistBlocks != null && this.blacklistBlocks.length > 0) {
+            buf.writeInt(this.blacklistBlocks.length);
+            for (String s : this.blacklistBlocks) {
                 buf.writeInt(s.length());
                 buf.writeString(s);
             }
         } else
             buf.writeInt(0);
-        if (config.blacklistTools != null && config.blacklistTools.length > 0) {
-            buf.writeInt(config.blacklistTools.length);
-            for (String s : config.blacklistTools) {
+        if (this.blacklistTools != null && this.blacklistTools.length > 0) {
+            buf.writeInt(this.blacklistTools.length);
+            for (String s : this.blacklistTools) {
                 buf.writeInt(s.length());
                 buf.writeString(s);
             }
         } else
             buf.writeInt(0);
-        buf.writeBoolean(config.checkHardness);
-        buf.writeBoolean(config.isToolRequired);
-        buf.writeBoolean(config.invertBlockBlacklist);
-        buf.writeBoolean(config.invertToolBlacklist);
-        buf.writeBoolean(config.dontTakeDurability);
+        buf.writeBoolean(this.checkHardness);
+        buf.writeBoolean(this.isToolRequired);
+        buf.writeBoolean(this.invertBlockBlacklist);
+        buf.writeBoolean(this.invertToolBlacklist);
+        buf.writeBoolean(this.dontTakeDurability);
         return buf;
     }
 
-    public static EasyExcavateConfig readConfig(PacketByteBuf buf) {
-        int maxBlocks = buf.readInt();
-        int maxRange = buf.readInt();
-        float bonusExhaustionMultiplier = buf.readFloat();
-        boolean enableBlockEntities = buf.readBoolean();
+    public EasyExcavateConfig(PacketByteBuf buf) {
+        this.maxBlocks = buf.readInt();
+        this.maxRange = buf.readInt();
+        this.bonusExhaustionMultiplier = buf.readFloat();
+        this.enableBlockEntities = buf.readBoolean();
         int blacklistBlocksLength = buf.readInt();
-        String[] blacklistBlocks = new String[blacklistBlocksLength];
+        this.blacklistBlocks = new String[blacklistBlocksLength];
         if (blacklistBlocksLength != 0) {
             for (int i = 0; i < blacklistBlocksLength; i++) {
                 blacklistBlocks[i] = buf.readString(buf.readInt());
             }
         }
         int blacklistToolsLength = buf.readInt();
-        String[] blacklistTools = new String[blacklistToolsLength];
+        this.blacklistTools = new String[blacklistToolsLength];
         if (blacklistToolsLength != 0) {
             for (int j = 0; j < blacklistToolsLength; j++) {
                 blacklistTools[j] = buf.readString(buf.readInt());
             }
         }
-        boolean checkHardness = buf.readBoolean();
-        boolean isToolRequired = buf.readBoolean();
-        boolean invertBlockBlacklist = buf.readBoolean();
-        boolean invertToolBlacklist = buf.readBoolean();
-        boolean dontTakeDurability = buf.readBoolean();
-        return new EasyExcavateConfig(maxBlocks,
-                                  maxRange,
-                                  bonusExhaustionMultiplier,
-                                  EasyExcavateMod.model.debug(),
-                                  enableBlockEntities,
-                                  EasyExcavateMod.model.reverseBehavior(),
-                                  blacklistBlocks,
-                                  blacklistTools,
-                                  checkHardness,
-                                  isToolRequired,
-                                  invertBlockBlacklist,
-                                  invertToolBlacklist,
-                                  dontTakeDurability);
+        this.checkHardness = buf.readBoolean();
+        this.isToolRequired = buf.readBoolean();
+        this.invertBlockBlacklist = buf.readBoolean();
+        this.invertToolBlacklist = buf.readBoolean();
+        this.dontTakeDurability = buf.readBoolean();
     }
 
     public boolean equals(EasyExcavateConfig config) {
