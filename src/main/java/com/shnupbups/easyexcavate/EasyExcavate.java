@@ -1,7 +1,13 @@
 package com.shnupbups.easyexcavate;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
@@ -9,23 +15,18 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.network.packet.CustomPayloadS2CPacket;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
+import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.network.packet.CustomPayloadC2SPacket;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 
 public class EasyExcavate implements ModInitializer {
 
@@ -93,7 +94,7 @@ public class EasyExcavate implements ModInitializer {
 				debugOut(((Inventory)blockEntity).isInvEmpty());
 				ItemScatterer.spawn(world, pos, (Inventory) blockEntity);
 			}
-			if(!config.dontTakeDurability)stack.onBlockBroken(world, state, pos, player);
+			if(!config.dontTakeDurability)stack.postMine(world, state, pos, player);
 			if (!player.isCreative()) {
 				state.getBlock().afterBreak(world, player, pos, state, world.getBlockEntity(pos), stack.copy());
 			}
