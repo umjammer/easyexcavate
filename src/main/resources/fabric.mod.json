@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "easyexcavate",
-  "version": "1.5.1",
+  "version": "1.5.4",
 
   "name": "Easy Excavate",
   "description": "VeinMiner / OreExcavation alternative for Fabric",
@@ -10,7 +10,8 @@
   ],
   "contributors": [
     "Dinolek",
-	"XuyuEre"
+	"XuyuEre",
+    "Umjammer",
   ],
   "contact": {
     "homepage": "https://minecraft.curseforge.com/projects/easyexcavate",
@@ -24,10 +25,10 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.shnupbups.easyexcavate.EasyExcavate"
+      "com.shnupbups.easyexcavate.EasyExcavateMod"
     ],
     "client": [
-      "com.shnupbups.easyexcavate.EasyExcavateClient"
+      "com.shnupbups.easyexcavate.EasyExcavateClientMod"
     ]
   },
   "mixins": [
